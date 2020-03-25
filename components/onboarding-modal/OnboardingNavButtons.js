@@ -78,7 +78,13 @@ class OnboardingNavButtons extends React.Component {
               </StyledRoundButton>
             )}
 
-            <StyledButton buttonStyle="primary" onClick={submitCollectiveInfo} loading={loading}>
+            <StyledButton
+              buttonStyle="primary"
+              type="submit"
+              onClick={this.props.handleClick}
+              ref={this.props.ref}
+              loading={loading}
+            >
               <FormattedMessage id="Finish" defaultMessage="Finish" />
             </StyledButton>
           </Fragment>

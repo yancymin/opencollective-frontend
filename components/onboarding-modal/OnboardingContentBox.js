@@ -5,6 +5,7 @@ import { FormattedMessage, defineMessages, injectIntl } from 'react-intl';
 import { Github } from '@styled-icons/fa-brands/Github';
 import { Twitter } from '@styled-icons/fa-brands/Twitter';
 import { isURL, matches } from 'validator';
+import { Formik, Field, Form } from 'formik';
 
 import Container from '../../components/Container';
 import { H1, P } from '../../components/Text';
@@ -66,31 +67,34 @@ class OnboardingContentBox extends React.Component {
     );
   };
 
-  validateField = (fieldName, fieldValue) => {
-    // fields aren't required so don't validate empty
-    if (fieldValue === '') {
-      return;
-    }
-    if (fieldName === 'website') {
-      isURL(fieldValue) === false
-        ? this.setState({ websiteError: this.props.intl.formatMessage(this.messages['websiteError']) })
-        : this.setState({ websiteError: null });
-    } else if (fieldName === 'githubHandle') {
-      // https://github.com/shinnn/github-username-regex
-      matches(fieldValue, /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i) === false
-        ? this.setState({ githubError: this.props.intl.formatMessage(this.messages['githubError']) })
-        : this.setState({ githubError: null });
-    } else if (fieldName === 'twitterHandle') {
-      // https://stackoverflow.com/questions/11361044/twitter-name-validation
-      matches(fieldValue, /^[a-zA-Z0-9_]{1,15}$/) === false
-        ? this.setState({ twitterError: this.props.intl.formatMessage(this.messages['twitterError']) })
-        : this.setState({ twitterError: null });
-    }
-  };
-
   render() {
     const { step, collective, updateAdmins, addContact, intl, LoggedInUser, viewport } = this.props;
     const { admins, websiteError, twitterError, githubError } = this.state;
+
+    const initialValues = {
+      website: '',
+      githubHandle: '',
+      twitterHandle: '',
+    };
+
+    const validate = values => {
+      const errors = {};
+
+      if (isURL(values.website) === false) {
+        errors.website = this.props.intl.formatMessage(this.messages['websiteError']);
+      }
+      // https://github.com/shinnn/github-username-regex
+      if (matches(values.githubHandle, /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i) === false) {
+        errors.githubHandle = this.props.intl.formatMessage(this.messages['githubError']);
+      }
+
+      if (matches(values.twitterHandle, /^[a-zA-Z0-9_]{1,15}$/) === false) {
+        // https://stackoverflow.com/questions/11361044/twitter-name-validation
+        errors.twitterHandle = this.props.intl.formatMessage(this.messages['twitterError']);
+      }
+
+      return errors;
+    };
 
     return (
       <Container display="flex" flexDirection="column" width={['90%', '80%']} alignItems="center">
@@ -190,66 +194,89 @@ class OnboardingContentBox extends React.Component {
               </H1>
             </Box>
             <Flex flexDirection="column" width="100%">
-              <P>
-                <FormattedMessage id="onboarding.contact.website" defaultMessage="Do you have a website?" />
-              </P>
-              <StyledInputField my={[3, 2]} htmlFor="website" error={websiteError}>
-                {inputProps => (
-                  <StyledInputGroup
-                    type="text"
-                    onBlur={({ target }) => {
-                      addContact(target.name, target.value);
-                      this.validateField(target.name, target.value);
-                    }}
-                    prepend="http://"
-                    placeholder="www.agora.com"
-                    {...inputProps}
-                  />
-                )}
-              </StyledInputField>
-              <P>
-                <FormattedMessage id="onboarding.contact.connect" defaultMessage="Connect your social platforms" />
-              </P>
-              <P my={2} fontSize="Caption" color="black.500">
-                <FormattedMessage
-                  id="onboarding.contact.social"
-                  defaultMessage="Tell your contributors how to reach your Collective through social media."
-                />
-              </P>
-              <Flex alignItems="center">
-                <Twitter size={20} color="black.500" />
-                <StyledInputField ml={2} my={2} htmlFor="twitterHandle" flexGrow={1} error={twitterError}>
-                  {inputProps => (
-                    <StyledInputGroup
-                      type="text"
-                      onBlur={({ target }) => {
-                        addContact(target.name, target.value);
-                        this.validateField(target.name, target.value);
-                      }}
-                      placeholder="agora"
-                      prepend="@"
-                      {...inputProps}
-                    />
-                  )}
-                </StyledInputField>
-              </Flex>
-              <Flex alignItems="center">
-                <Github size={20} color="black.500" />
-                <StyledInputField ml={2} my={2} htmlFor="githubHandle" flexGrow={1} error={githubError}>
-                  {inputProps => (
-                    <StyledInputGroup
-                      type="text"
-                      onBlur={({ target }) => {
-                        addContact(target.name, target.value);
-                        this.validateField(target.name, target.value);
-                      }}
-                      placeholder="agoraos"
-                      prepend="github.com/"
-                      {...inputProps}
-                    />
-                  )}
-                </StyledInputField>
-              </Flex>
+              <Formik
+                ref={this.props.ref}
+                validate={validate}
+                initialValues={initialValues}
+                onSubmit={values => console.log(values)}
+                validateOnChange={true}
+              >
+                {formik => {
+                  const { values, errors, touched } = formik;
+
+                  return (
+                    <Form ref={this.form}>
+                      <P>
+                        <FormattedMessage id="onboarding.contact.website" defaultMessage="Do you have a website?" />
+                      </P>
+                      <StyledInputField
+                        my={[3, 2]}
+                        htmlFor="website"
+                        value={values.website}
+                        error={touched.website && errors.website}
+                      >
+                        {inputProps => (
+                          <Field
+                            as={StyledInputGroup}
+                            type="text"
+                            prepend="http://"
+                            placeholder="www.agora.com"
+                            {...inputProps}
+                          />
+                        )}
+                      </StyledInputField>
+                      <P>
+                        <FormattedMessage
+                          id="onboarding.contact.connect"
+                          defaultMessage="Connect your social platforms"
+                        />
+                      </P>
+                      <P my={2} fontSize="Caption" color="black.500">
+                        <FormattedMessage
+                          id="onboarding.contact.social"
+                          defaultMessage="Tell your contributors how to reach your Collective through social media."
+                        />
+                      </P>
+                      <Flex alignItems="center">
+                        <Twitter size={20} color="black.500" />
+                        <StyledInputField
+                          ml={2}
+                          my={2}
+                          htmlFor="twitterHandle"
+                          flexGrow={1}
+                          value={values.twitterHandle}
+                          error={touched.twitterHandle && errors.twitterHandle}
+                        >
+                          {inputProps => (
+                            <Field as={StyledInputGroup} type="text" placeholder="agora" prepend="@" {...inputProps} />
+                          )}
+                        </StyledInputField>
+                      </Flex>
+                      <Flex alignItems="center">
+                        <Github size={20} color="black.500" />
+                        <StyledInputField
+                          ml={2}
+                          my={2}
+                          htmlFor="githubHandle"
+                          flexGrow={1}
+                          value={values.githubHandle}
+                          error={touched.githubHandle && errors.githubHandle}
+                        >
+                          {inputProps => (
+                            <Field
+                              as={StyledInputGroup}
+                              type="text"
+                              placeholder="agoraos"
+                              prepend="github.com/"
+                              {...inputProps}
+                            />
+                          )}
+                        </StyledInputField>
+                      </Flex>
+                    </Form>
+                  );
+                }}
+              </Formik>
             </Flex>
           </Fragment>
         )}

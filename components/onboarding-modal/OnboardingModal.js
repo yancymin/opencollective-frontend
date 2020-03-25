@@ -196,6 +196,9 @@ class OnboardingModal extends React.Component {
     Router.pushRoute('collective', { slug: this.props.collective.slug });
   };
 
+  form = React.createRef();
+  handleClick = (...args) => this.form.current.handleSubmit(...args);
+
   render() {
     const { collective, LoggedInUser, showOnboardingModal, mode } = this.props;
     const { step, isSubmitting, error, noOverlay } = this.state;
@@ -225,6 +228,7 @@ class OnboardingModal extends React.Component {
             <Flex flexDirection="column" alignItems="center">
               <img width={'160px'} height={this.getStepParams(step, 'height')} src={this.getStepParams(step, 'src')} />
               <OnboardingContentBox
+                ref={this.form}
                 step={step}
                 collective={collective}
                 LoggedInUser={LoggedInUser}
@@ -241,6 +245,8 @@ class OnboardingModal extends React.Component {
           <ResponsiveModalFooter>
             <Flex flexDirection="column" alignItems="center">
               <OnboardingNavButtons
+                ref={this.form}
+                handleClick={this.handleClick}
                 step={step}
                 mode={mode}
                 slug={collective.slug}

@@ -1,3 +1,4 @@
+/* eslint-disable prefer-arrow-callback */
 import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { Flex } from '@rebass/grid';
@@ -25,136 +26,142 @@ const params = {
   },
 };
 
-class OnboardingNavButtons extends React.Component {
-  static propTypes = {
-    step: PropTypes.number,
-    slug: PropTypes.string,
-    mode: PropTypes.string,
-    submitCollectiveInfo: PropTypes.func,
-    loading: PropTypes.bool,
-    viewport: PropTypes.object,
-  };
+const getStepParams = (step, param) => {
+  return params[step][param];
+};
 
-  getStepParams = (step, param) => {
-    return params[step][param];
-  };
-
-  render() {
-    const { step, mode, slug, submitCollectiveInfo, loading, viewport } = this.props;
-
-    return (
-      <Flex>
-        {step === 2 ? (
-          <Fragment>
-            {viewport === VIEWPORTS.MOBILE ? (
-              <StyledButton
-                mx={1}
-                buttonStyle="primary"
-                disabled={this.getStepParams(step, 'disabled')}
-                onClick={() => {
-                  Router.pushRoute('collective-with-onboarding', {
-                    slug,
-                    mode,
-                    step: this.getStepParams(step, 'routerStepBack'),
-                  });
-                }}
-              >
-                <FormattedMessage id="contribute.prevStep" defaultMessage="Previous step" />
-              </StyledButton>
-            ) : (
-              <StyledRoundButton
-                mx={1}
-                size={48}
-                disabled={this.getStepParams(step, 'disabled')}
-                onClick={() => {
-                  Router.pushRoute('collective-with-onboarding', {
-                    slug,
-                    mode,
-                    step: this.getStepParams(step, 'routerStepBack'),
-                  });
-                }}
-              >
-                ←
-              </StyledRoundButton>
-            )}
-
+const OnboardingNavButtons = withViewport(function OnboardingNavButtons({
+  step,
+  mode,
+  slug,
+  submitCollectiveInfo,
+  loading,
+  viewport,
+  inputRef,
+  handleClick,
+}) {
+  return (
+    <Flex>
+      {step === 2 ? (
+        <Fragment>
+          {viewport === VIEWPORTS.MOBILE ? (
             <StyledButton
+              mx={1}
               buttonStyle="primary"
-              type="submit"
-              onClick={this.props.handleClick}
-              ref={this.props.ref}
-              loading={loading}
+              disabled={getStepParams(step, 'disabled')}
+              onClick={() => {
+                Router.pushRoute('collective-with-onboarding', {
+                  slug,
+                  mode,
+                  step: getStepParams(step, 'routerStepBack'),
+                });
+              }}
             >
-              <FormattedMessage id="Finish" defaultMessage="Finish" />
+              <FormattedMessage id="contribute.prevStep" defaultMessage="Previous step" />
             </StyledButton>
-          </Fragment>
-        ) : (
-          <Fragment>
-            {viewport === VIEWPORTS.MOBILE ? (
-              <StyledButton
-                mx={1}
-                buttonStyle="primary"
-                disabled={this.getStepParams(step, 'disabled')}
-                onClick={() => {
-                  Router.pushRoute('collective-with-onboarding', {
-                    slug,
-                    mode,
-                    step: this.getStepParams(step, 'routerStepBack'),
-                  });
-                }}
-              >
-                <FormattedMessage id="contribute.prevStep" defaultMessage="Previous step" />
-              </StyledButton>
-            ) : (
-              <StyledRoundButton
-                mx={1}
-                size={48}
-                disabled={this.getStepParams(step, 'disabled')}
-                onClick={() => {
-                  Router.pushRoute('collective-with-onboarding', {
-                    slug,
-                    mode,
-                    step: this.getStepParams(step, 'routerStepBack'),
-                  });
-                }}
-              >
-                ←
-              </StyledRoundButton>
-            )}
-            {viewport === VIEWPORTS.MOBILE ? (
-              <StyledButton
-                mx={1}
-                buttonStyle="primary"
-                onClick={() => {
-                  Router.pushRoute('collective-with-onboarding', {
-                    slug,
-                    mode,
-                    step: this.getStepParams(step, 'routerStepForward'),
-                  });
-                }}
-              >
-                <FormattedMessage id="contribute.nextStep" defaultMessage="Next step" />
-              </StyledButton>
-            ) : (
-              <StyledRoundButton
-                mx={1}
-                size={48}
-                onClick={() => {
-                  Router.pushRoute('collective-with-onboarding', {
-                    slug,
-                    mode,
-                    step: this.getStepParams(step, 'routerStepForward'),
-                  });
-                }}
-              >
-                →
-              </StyledRoundButton>
-            )}
-          </Fragment>
-        )}
-      </Flex>
-    );
-  }
-}
+          ) : (
+            <StyledRoundButton
+              mx={1}
+              size={48}
+              disabled={getStepParams(step, 'disabled')}
+              onClick={() => {
+                Router.pushRoute('collective-with-onboarding', {
+                  slug,
+                  mode,
+                  step: getStepParams(step, 'routerStepBack'),
+                });
+              }}
+            >
+              ←
+            </StyledRoundButton>
+          )}
 
-export default withViewport(OnboardingNavButtons);
+          <StyledButton buttonStyle="primary" type="submit" onClick={handleClick} ref={inputRef} loading={loading}>
+            <FormattedMessage id="Finish" defaultMessage="Finish" />
+          </StyledButton>
+        </Fragment>
+      ) : (
+        <Fragment>
+          {viewport === VIEWPORTS.MOBILE ? (
+            <StyledButton
+              mx={1}
+              buttonStyle="primary"
+              disabled={getStepParams(step, 'disabled')}
+              onClick={() => {
+                Router.pushRoute('collective-with-onboarding', {
+                  slug,
+                  mode,
+                  step: getStepParams(step, 'routerStepBack'),
+                });
+              }}
+            >
+              <FormattedMessage id="contribute.prevStep" defaultMessage="Previous step" />
+            </StyledButton>
+          ) : (
+            <StyledRoundButton
+              mx={1}
+              size={48}
+              disabled={getStepParams(step, 'disabled')}
+              onClick={() => {
+                Router.pushRoute('collective-with-onboarding', {
+                  slug,
+                  mode,
+                  step: getStepParams(step, 'routerStepBack'),
+                });
+              }}
+            >
+              ←
+            </StyledRoundButton>
+          )}
+          {viewport === VIEWPORTS.MOBILE ? (
+            <StyledButton
+              mx={1}
+              buttonStyle="primary"
+              onClick={() => {
+                Router.pushRoute('collective-with-onboarding', {
+                  slug,
+                  mode,
+                  step: getStepParams(step, 'routerStepForward'),
+                });
+              }}
+            >
+              <FormattedMessage id="contribute.nextStep" defaultMessage="Next step" />
+            </StyledButton>
+          ) : (
+            <StyledRoundButton
+              mx={1}
+              size={48}
+              onClick={() => {
+                Router.pushRoute('collective-with-onboarding', {
+                  slug,
+                  mode,
+                  step: getStepParams(step, 'routerStepForward'),
+                });
+              }}
+            >
+              →
+            </StyledRoundButton>
+          )}
+        </Fragment>
+      )}
+    </Flex>
+  );
+});
+
+// class OnboardingNavButtons extends React.Component {
+//   static propTypes = {
+//     step: PropTypes.number,
+//     slug: PropTypes.string,
+//     mode: PropTypes.string,
+//     submitCollectiveInfo: PropTypes.func,
+//     loading: PropTypes.bool,
+//     viewport: PropTypes.object,
+//   };
+// }
+
+// export default withViewport(OnboardingNavButtons);
+
+// eslint-disable-next-line react/display-name
+export default React.forwardRef((props, ref) => {
+  return <OnboardingNavButtons {...props} inputRef={ref} />;
+});

@@ -205,7 +205,7 @@ class OnboardingContentBox extends React.Component {
                   const { values, errors, touched } = formik;
 
                   return (
-                    <Form ref={this.form}>
+                    <Form>
                       <P>
                         <FormattedMessage id="onboarding.contact.website" defaultMessage="Do you have a website?" />
                       </P>
@@ -285,4 +285,6 @@ class OnboardingContentBox extends React.Component {
   }
 }
 
-export default withViewport(injectIntl(OnboardingContentBox));
+export default withViewport(
+  injectIntl(React.forwardRef((props, ref) => <OnboardingContentBox ref={ref} {...props} />)),
+);

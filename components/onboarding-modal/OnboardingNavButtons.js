@@ -157,4 +157,4 @@ class OnboardingNavButtons extends React.Component {
   }
 }
 
-export default withViewport(OnboardingNavButtons);
+export default withViewport(React.forwardRef((props, ref) => <OnboardingNavButtons ref={ref} {...props} />));

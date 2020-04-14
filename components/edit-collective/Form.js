@@ -4,7 +4,6 @@ import { withRouter } from 'next/router';
 import { ArrowBack } from '@styled-icons/material/ArrowBack';
 import { get, set, find } from 'lodash';
 import { Flex, Box } from '@rebass/grid';
-import { H3, H4, P } from '../Text';
 import { Button } from 'react-bootstrap';
 import { FormattedMessage, defineMessages, injectIntl } from 'react-intl';
 import { isMemberOfTheEuropeanUnion } from '@opencollective/taxes';
@@ -15,30 +14,15 @@ import { defaultBackgroundImage, CollectiveType } from '../../lib/constants/coll
 import { VAT_OPTIONS } from '../../lib/constants/vat';
 import { Currency } from '../../lib/constants/currency';
 
+import { H3, H4, P } from '../Text';
 import InputField from '../InputField';
 import Link from '../Link';
 import StyledButton from '../StyledButton';
 import Container from '../Container';
 import ExternalLink from '../ExternalLink';
 
-// Generic Sections
-import CollectiveGoals from './sections/CollectiveGoals';
-import ConnectedAccounts from './sections/ConnectedAccounts';
-import Updates from './sections/Updates';
-import Conversations from './sections/Conversations';
-import Export from './sections/Export';
-import Host from './sections/Host';
-import Members from './sections/Members';
-import PaymentMethods from './sections/PaymentMethods';
-import Tiers from './sections/Tiers';
-import Tickets from './sections/Tickets';
-import VirtualCards from './sections/VirtualCards';
-import Webhooks from './sections/Webhooks';
-
-// Fical Host Sections
-import FiscalHosting from './sections/FiscalHosting';
-import HostPlan from './sections/HostPlan';
-import InvoicesReceipts from './sections/InvoicesReceipts';
+// Sections
+import Sections from './sections';
 
 // Actions
 import EmptyBalance from './actions/EmptyBalance';
@@ -273,7 +257,7 @@ class EditCollectiveForm extends React.Component {
           if (!endsAt) {
             newEndDate.setHours(newEndDate.getHours() + 2);
           } else {
-            // https://github.com/opencollπective/opencollective/issues/1232
+            // https://github.com/opencollective/opencollective/issues/1232
             const endsAtDate = new Date(endsAt);
             newEndDate = new Date(value);
             newEndDate.setHours(endsAtDate.getHours());
@@ -333,37 +317,41 @@ class EditCollectiveForm extends React.Component {
         return null;
 
       case EDIT_COLLECTIVE_SECTIONS.COLLECTIVE_GOALS:
-        return <CollectiveGoals collective={collective} currency={collective.currency} />;
+        return <Sections.CollectiveGoals collective={collective} currency={collective.currency} />;
 
       case EDIT_COLLECTIVE_SECTIONS.CONNECTED_ACCOUNTS:
-        return <ConnectedAccounts collective={collective} connectedAccounts={collective.connectedAccounts} />;
+        return <Sections.ConnectedAccounts collective={collective} connectedAccounts={collective.connectedAccounts} />;
 
       case EDIT_COLLECTIVE_SECTIONS.UPDATES:
-        return <Updates collective={collective} />;
+        return <Sections.Updates collective={collective} />;
 
       case EDIT_COLLECTIVE_SECTIONS.CONVERSATIONS:
-        return <Conversations collective={collective} />;
+        return <Sections.Conversations collective={collective} />;
 
       case EDIT_COLLECTIVE_SECTIONS.EXPENSES:
         return null;
 
       case EDIT_COLLECTIVE_SECTIONS.EXPORT:
-        return <Export collective={collective} />;
+        return <Sections.Export collective={collective} />;
 
       case EDIT_COLLECTIVE_SECTIONS.HOST:
         return (
-          <Host collective={collective} LoggedInUser={LoggedInUser} editCollectiveMutation={this.props.onSubmit} />
+          <Sections.Host
+            collective={collective}
+            LoggedInUser={LoggedInUser}
+            editCollectiveMutation={this.props.onSubmit}
+          />
         );
 
       case EDIT_COLLECTIVE_SECTIONS.MEMBERS:
-        return <Members collective={collective} LoggedInUser={LoggedInUser} />;
+        return <Sections.Members collective={collective} LoggedInUser={LoggedInUser} />;
 
       case EDIT_COLLECTIVE_SECTIONS.PAYMENT_METHODS:
-        return <PaymentMethods collectiveSlug={collective.slug} sendingSection={true} />;
+        return <Sections.PaymentMethods collectiveSlug={collective.slug} sendingSection={true} />;
 
       case EDIT_COLLECTIVE_SECTIONS.TIERS:
         return (
-          <Tiers
+          <Sections.Tiers
             title="Tiers"
             types={['TIER', 'MEMBERSHIP', 'SERVICE', 'PRODUCT', 'DONATION']}
             tiers={this.state.tiers}
@@ -376,7 +364,7 @@ class EditCollectiveForm extends React.Component {
 
       case EDIT_COLLECTIVE_SECTIONS.TICKETS:
         return (
-          <Tickets
+          <Sections.Tickets
             title="Tickets"
             types={['TICKET']}
             tiers={this.state.tickets}
@@ -388,7 +376,7 @@ class EditCollectiveForm extends React.Component {
         );
 
       case EDIT_COLLECTIVE_SECTIONS.VIRTUAL_CARDS:
-        return <VirtualCards collectiveId={collective.id} collectiveSlug={collective.slug} />;
+        return <Sections.VirtualCards collectiveId={collective.id} collectiveSlug={collective.slug} />;
 
       case 'gift-cards-create':
       case 'gift-cards-send':
@@ -428,7 +416,7 @@ class EditCollectiveForm extends React.Component {
         );
 
       case EDIT_COLLECTIVE_SECTIONS.WEBHOOKS:
-        return <Webhooks collectiveSlug={collective.slug} />;
+        return <Sections.Webhooks collectiveSlug={collective.slug} />;
 
       case EDIT_COLLECTIVE_SECTIONS.ADVANCED:
         return (
@@ -445,19 +433,21 @@ class EditCollectiveForm extends React.Component {
       // Fiscal Hosts
 
       case EDIT_COLLECTIVE_SECTIONS.FISCAL_HOSTING:
-        return <FiscalHosting collective={collective} LoggedInUser={LoggedInUser} />;
+        return <Sections.FiscalHosting collective={collective} LoggedInUser={LoggedInUser} />;
 
       case EDIT_COLLECTIVE_SECTIONS.HOST_PLAN:
-        return <HostPlan collective={collective} />;
+        return <Sections.HostPlan collective={collective} />;
 
       case EDIT_COLLECTIVE_SECTIONS.EXPENSES_PAYOUTS:
         return null;
 
       case EDIT_COLLECTIVE_SECTIONS.INVOICES_RECEIPTS:
-        return <InvoicesReceipts collective={collective} />;
+        return <Sections.InvoicesReceipts collective={collective} />;
 
       case EDIT_COLLECTIVE_SECTIONS.RECEIVING_MONEY:
-        return <PaymentMethods collectiveSlug={collective.slug} collective={collective} receivingSection={true} />;
+        return (
+          <Sections.PaymentMethods collectiveSlug={collective.slug} collective={collective} receivingSection={true} />
+        );
 
       case EDIT_COLLECTIVE_SECTIONS.SENDING_MONEY:
         return (

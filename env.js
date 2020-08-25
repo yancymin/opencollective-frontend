@@ -30,7 +30,7 @@ const defaults = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  defaults.TW_API_COLLECTIVE_SLUG = 'opencollectiveinc';
+  defaults.TW_API_COLLECTIVE_SLUG = 'opencollective';
 }
 
 if (process.env.NODE_ENV === 'e2e') {

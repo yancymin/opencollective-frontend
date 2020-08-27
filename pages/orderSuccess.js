@@ -13,6 +13,7 @@ import { facebookShareURL, tweetURL } from '../lib/url_helpers';
 
 import ErrorPage from '../components/ErrorPage';
 import { Box, Flex } from '../components/Grid';
+import { I18nBold } from '../components/I18nFormatters';
 import Link from '../components/Link';
 import LinkCollective from '../components/LinkCollective';
 import Loading from '../components/Loading';
@@ -215,7 +216,10 @@ class OrderSuccessPage extends React.Component {
             <MessageBox type="warning" my={4} mx={2}>
               <FormattedMessage
                 id="collective.user.orderProcessing.manual"
-                defaultMessage="Your donation is pending. Please follow the instructions in the confirmation email to manually pay the host of the collective."
+                defaultMessage="<i18n-bold>Your donation is pending.</i18n-bold> Please follow the instructions in the confirmation email to manually pay the host of the collective."
+                values={{
+                  'i18n-bold': I18nBold,
+                }}
               />
             </MessageBox>
           ) : (

@@ -9,13 +9,18 @@ import { withRouter } from 'next/router';
 import { defineMessages, FormattedMessage, injectIntl } from 'react-intl';
 import styled, { css } from 'styled-components';
 
+import { ORDER_STATUS } from '../../lib/constants/order-status';
 import { API_V2_CONTEXT, gqlV2 } from '../../lib/graphql/helpers';
 import { facebookShareURL, tweetURL } from '../../lib/url_helpers';
 
 import Container from '../../components/Container';
 import { Box, Flex } from '../../components/Grid';
 import Newsletter from '../../components/home/Newsletter';
+import HTMLContent from '../../components/HTMLContent';
+import { I18nBold } from '../../components/I18nFormatters';
+import Link from '../../components/Link';
 import Loading from '../../components/Loading';
+import MessageBox from '../../components/MessageBox';
 import StyledLink from '../../components/StyledLink';
 import { H3, P, Span } from '../../components/Text';
 import { withUser } from '../../components/UserProvider';
@@ -43,7 +48,7 @@ const ContainerWithImage = styled(Container)`
     background: url('/static/images/new-contribution-flow/NewContributionFlowSuccessPageBackgroundDesktop.png');
     background-position: left;
     background-repeat: no-repeat;
-    background-size: auto 100%;
+    background-size: cover;
   }
 `;
 
@@ -84,6 +89,12 @@ ShareLink.defaultProps = {
   mb: 2,
   target: '_blank',
 };
+
+const BankTransferInfoContainer = styled(Container)`
+  border: 1px solid ${themeGet('colors.black.400')};
+  border-radius: 12px;
+  background-color: white;
+`;
 
 class NewContributionFlowSuccess extends React.Component {
   static propTypes = {
@@ -232,10 +243,65 @@ class NewContributionFlowSuccess extends React.Component {
     return <PublicMessageForm order={this.props.data.order} publicMessage={publicMessage} />;
   };
 
+  renderBankTransferInformation = () => {
+    const bankTransferInstructions = get(
+      this.props.data,
+      'order.toAccount.host.settings.paymentMethods.manual.instructions',
+      null,
+    );
+
+    return (
+      <Flex flexDirection="column" justifyContent="center" width={[1, 3 / 4]} px={[4, 0]} py={[2, 0]}>
+        <MessageBox type="warning" fontSize="12px">
+          <FormattedMessage
+            id="collective.user.orderProcessing.manual"
+            defaultMessage="<i18n-bold>Your donation is pending.</i18n-bold> Please follow the instructions in the confirmation email to manually pay the host of the collective."
+            values={{
+              'i18n-bold': I18nBold,
+            }}
+          />
+        </MessageBox>
+        <BankTransferInfoContainer my={3} p={4}>
+          <H3>
+            <FormattedMessage id="NewContributionFlow.PaymentInstructions" defaultMessage="Payment instructions" />
+          </H3>
+          <Flex mt={2}>
+            <HTMLContent>{bankTransferInstructions}</HTMLContent>
+          </Flex>
+        </BankTransferInfoContainer>
+        <Flex px={3}>
+          <P fontSize="16px" color="black.700">
+            <FormattedMessage
+              id="NewContributionFlow.InTheMeantime"
+              defaultMessage="In the meantime, you can follow {collective} and see how they are spending the money {collectiveLink}."
+              values={{
+                collective: this.props.data.order.toAccount.name,
+                collectiveLink: (
+                  <Link
+                    route="collective"
+                    params={{
+                      slug: this.props.data.order.toAccount.slug,
+                    }}
+                  >
+                    <FormattedMessage
+                      id="NewContributionFlow.OnCollectivePage"
+                      defaultMessage="on their collective page"
+                    />
+                  </Link>
+                ),
+              }}
+            />
+          </P>
+        </Flex>
+      </Flex>
+    );
+  };
+
   render() {
     const { loadingLoggedInUser, LoggedInUser, collective, data } = this.props;
     const { order } = data;
     const shareURL = `${process.env.WEBSITE_URL}${collective.path}`;
+    const pendingOrder = order && order.status === ORDER_STATUS.PENDING;
 
     const getPublicMessage = order => {
       return get(order, 'fromAccount.memberOf.nodes[0].publicMessage');
@@ -245,13 +311,19 @@ class NewContributionFlowSuccess extends React.Component {
       <Loading />
     ) : (
       <Flex justifyContent="center" width={1} minHeight={[400, 800]} flexDirection={['column', 'row']}>
-        <ContainerWithImage display="flex" alignItems="center" justifyContent="center" width={[1, 1 / 2]}>
+        <ContainerWithImage
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          width={[1, '523px', '762px']}
+          flexShrink={0}
+        >
           <Flex flexDirection="column" alignItems="center" justifyContent="center" my={4} width={1}>
             <H3 mb={3}>
               <FormattedMessage id="NewContributionFlow.Success.Header" defaultMessage="Thank you! 🎉" />
             </H3>
             <Box mb={3}>
-              <P fontSize="20px" fontColor="black.700" fontWeight={500}>
+              <P fontSize="20px" fontColor="black.700" fontWeight={500} textAlign="center">
                 <FormattedMessage
                   id="NewContributionFlow.Success.NowSupporting"
                   defaultMessage="You are now supporting {collective}."
@@ -287,8 +359,8 @@ class NewContributionFlowSuccess extends React.Component {
             {this.renderCommentForm(LoggedInUser, getPublicMessage(order))}
           </Flex>
         </ContainerWithImage>
-        <Flex flexDirection="column" alignItems="center" justifyContent="center" width={[1, 1 / 2]}>
-          {this.renderCallsToAction()}
+        <Flex flexDirection="column" alignItems="center" justifyContent="center" width={1}>
+          {pendingOrder ? this.renderBankTransferInformation() : this.renderCallsToAction()}
         </Flex>
       </Flex>
     );
@@ -300,6 +372,7 @@ const orderSuccessQuery = gqlV2/* GraphQL */ `
   query NewContributionFlowOrderSuccess($order: OrderReferenceInput!, $memberAccount: AccountReferenceInput) {
     order(order: $order) {
       id
+      status
       amount {
         value
         currency
@@ -328,6 +401,12 @@ const orderSuccessQuery = gqlV2/* GraphQL */ `
         ... on AccountWithContributions {
           contributors {
             totalCount
+          }
+        }
+        ... on AccountWithHost {
+          host {
+            id
+            settings
           }
         }
       }

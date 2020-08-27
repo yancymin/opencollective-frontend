@@ -172,6 +172,8 @@ class ContributionFlow extends React.Component {
       };
     } else if (stepPayment.paymentMethod.type === GQLV2_PAYMENT_METHOD_TYPES.PAYPAL) {
       return pick(stepPayment.paymentMethod, ['type', 'paypalInfo.token', 'paypalInfo.data']);
+    } else if (stepPayment.paymentMethod.type === GQLV2_PAYMENT_METHOD_TYPES.BANK_TRANSFER) {
+      return pick(stepPayment.paymentMethod, ['type']);
     }
   };
 

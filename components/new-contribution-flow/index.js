@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from '@apollo/client/react/hoc';
-import { get, pick } from 'lodash';
+import { find, get, pick } from 'lodash';
 import memoizeOne from 'memoize-one';
 import { defineMessages, injectIntl } from 'react-intl';
 import styled from 'styled-components';
@@ -10,6 +10,7 @@ import { CollectiveType } from '../../lib/constants/collectives';
 import { getGQLV2FrequencyFromInterval } from '../../lib/constants/intervals';
 import { GQLV2_PAYMENT_METHOD_TYPES } from '../../lib/constants/payment-methods';
 import { TierTypes } from '../../lib/constants/tiers-types';
+import { TransactionTypes } from '../../lib/constants/transactions';
 import { formatErrorMessage, getErrorFromGraphqlException } from '../../lib/errors';
 import { API_V2_CONTEXT, gqlV2 } from '../../lib/graphql/helpers';
 import { stripeTokenToPaymentMethod } from '../../lib/stripe';
@@ -22,6 +23,7 @@ import NewContributeFAQ from '../../components/faqs/NewContributeFAQ';
 import { Box, Grid } from '../../components/Grid';
 import { addSignupMutation } from '../../components/SignInOrJoinFree';
 
+import { isValidExternalRedirect } from '../../pages/external-redirect';
 import Loading from '../Loading';
 import MessageBox from '../MessageBox';
 import Steps from '../Steps';
@@ -82,6 +84,7 @@ class ContributionFlow extends React.Component {
     fixedAmount: PropTypes.number,
     skipStepDetails: PropTypes.bool,
     step: PropTypes.string,
+    redirect: PropTypes.string,
     verb: PropTypes.oneOf(['new-donate', 'new-contribute']),
     /** @ignore from withUser */
     refetchLoggedInUser: PropTypes.func,
@@ -148,7 +151,24 @@ class ContributionFlow extends React.Component {
   handleSuccess = order => {
     this.setState({ isSubmitted: true });
     this.props.refetchLoggedInUser(); // to update memberships
-    return this.pushStepRoute('success', { OrderId: order.data.createOrder.id });
+
+    if (isValidExternalRedirect(this.props.redirect)) {
+      const url = new URL(this.props.redirect);
+      const realOrder = order.data.createOrder.id;
+      url.searchParams.set('orderId', realOrder.legacyId);
+      url.searchParams.set('orderIdV2', realOrder.id);
+      url.searchParams.set('status', realOrder.status);
+
+      const transaction = find(order.transactions, { type: TransactionTypes.CREDIT });
+      if (transaction) {
+        url.searchParams.set('transactionid', transaction.legacyId);
+        url.searchParams.set('transactionIdV2', transaction.id);
+      }
+
+      return Router.pushRoute('external-redirect', { url: url.href });
+    } else {
+      return this.pushStepRoute('success', { OrderId: order.data.createOrder.id });
+    }
   };
 
   showError = error => {
@@ -478,10 +498,16 @@ const addCreateOrderMutation = graphql(
     mutation CreateOrder($order: OrderCreateInput!) {
       createOrder(order: $order) {
         id
+        legacyId
         status
         frequency
         amount {
           valueInCents
+        }
+        transactions {
+          id
+          legacyId
+          type
         }
       }
     }
